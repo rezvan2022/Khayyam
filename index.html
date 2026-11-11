@@ -1,0 +1,1021 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Læs med Khayyam</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Vazirmatn:wght@400;700&display=swap">
+<style>
+/* Layout: one-column phone app. Home lists saved homework; the reader shows one sentence at a time
+   with thumb-height Repeat / Next buttons docked at the bottom. Atkinson Hyperlegible for every
+   letter shape a learner has to tell apart; Dannebrog red for actions, marker yellow for the word being read. */
+:root {
+  --bg: #F2F4F7;
+  --surface: #FFFFFF;
+  --ink: #14202B;
+  --muted: #586878;
+  --line: #D9E0E8;
+  --accent: #C8102E;
+  --accent-ink: #FFFFFF;
+  --hl: #FFD23F;
+  --hl-ink: #14202B;
+  --done: #FFF1BD;
+  --warn-bg: #FFF4D6;
+  --warn-ink: #5C4300;
+  --font: 'Atkinson Hyperlegible', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --fa: 'Vazirmatn', 'Noto Naskh Arabic', 'Geeza Pro', Tahoma, system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E1620; --surface: #162230; --ink: #EDF2F7; --muted: #9FB0C0; --line: #2A3A4B;
+    --accent: #D82A45; --accent-ink: #FFFFFF; --hl: #FFD23F; --hl-ink: #14202B; --done: #3B3519;
+    --warn-bg: #3A3014; --warn-ink: #FFE29A; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E1620; --surface: #162230; --ink: #EDF2F7; --muted: #9FB0C0; --line: #2A3A4B;
+  --accent: #D82A45; --accent-ink: #FFFFFF; --hl: #FFD23F; --hl-ink: #14202B; --done: #3B3519;
+  --warn-bg: #3A3014; --warn-ink: #FFE29A; color-scheme: dark;
+}
+
+[hidden] { display: none !important; }
+html { height: 100%; }
+body {
+  margin: 0; min-height: 100%; box-sizing: border-box; display: flex; flex-direction: column;
+  background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 17px; line-height: 1.45;
+  padding-block: 8px 12px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  -webkit-text-size-adjust: 100%;
+}
+#app { flex: 1; width: 100%; max-width: 34rem; margin: 0 auto; display: flex; flex-direction: column; }
+section { flex: 1; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+h1, h2, h3, p { margin: 0; }
+h1 { font-size: 1.45rem; line-height: 1.1; }
+h2 { font-size: 1.1rem; }
+.muted { color: var(--muted); }
+.sub { color: var(--muted); font-size: .9rem; }
+.label { font-size: .8rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.note { color: var(--muted); font-size: .95rem; min-height: 1.2em; }
+.hint { color: var(--muted); font-size: .92rem; }
+.warn { background: var(--warn-bg); color: var(--warn-ink); padding: 10px 12px; border-radius: 10px; font-size: .92rem; }
+
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.i { width: 24px; height: 24px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+.top { display: flex; align-items: center; gap: 12px; padding-block: 8px 4px; }
+.badge { width: 48px; height: 48px; flex: none; }
+.badge .bg { fill: var(--accent); }
+.badge .cross { stroke: #fff; stroke-opacity: .3; stroke-width: 4; }
+.badge text { fill: #fff; font: 700 27px var(--font); }
+
+.bar { display: flex; align-items: center; gap: 8px; padding-block: 4px; }
+.bar .grow { flex: 1; min-width: 0; }
+.bar h2 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  min-height: 52px; padding: 0 18px; border-radius: 14px; border: 1.5px solid transparent;
+  font: 700 1rem var(--font); color: var(--ink); background: transparent; cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.btn.big { min-height: 66px; font-size: 1.2rem; }
+.btn.primary { background: var(--accent); color: var(--accent-ink); }
+.btn.ghost { background: var(--surface); border-color: var(--line); }
+.btn.stop { background: var(--ink); color: var(--bg); }
+.btn.link { min-height: 44px; color: var(--muted); font-weight: 400; }
+.btn:disabled { opacity: .45; cursor: default; }
+.btn:active:not(:disabled) { transform: scale(.98); }
+.icon { width: 46px; height: 46px; flex: none; display: grid; place-items: center; border: 0; border-radius: 12px; background: transparent; color: var(--ink); cursor: pointer; }
+.icon:active { background: var(--line); }
+
+.list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.row-item { display: flex; align-items: stretch; gap: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+.item { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 12px 14px; border: 0; background: transparent; color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.item strong { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.item .muted { font-size: .88rem; }
+.row-item .icon { align-self: center; margin-right: 4px; width: auto; min-width: 46px; padding: 0 8px; font: 700 .9rem var(--font); }
+.row-item .icon.sure { color: var(--accent); }
+.empty { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; padding: 14px; border: 1.5px dashed var(--line); border-radius: 14px; color: var(--muted); }
+
+.thumbs { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 10px; }
+.thumbs li { position: relative; width: 92px; height: 124px; border-radius: 10px; overflow: hidden; border: 1px solid var(--line); background: var(--surface); }
+.thumbs img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.thumbs .n { position: absolute; left: 6px; bottom: 6px; background: var(--ink); color: var(--bg); font-size: .8rem; font-weight: 700; padding: 1px 8px; border-radius: 99px; }
+.thumbs button { position: absolute; top: 4px; right: 4px; width: 30px; height: 30px; border-radius: 99px; border: 0; background: var(--ink); color: var(--bg); display: grid; place-items: center; cursor: pointer; }
+.thumbs button .i { width: 16px; height: 16px; }
+
+.field { width: 100%; box-sizing: border-box; padding: 12px 14px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); font: 1.05rem/1.5 var(--font); }
+.area { min-height: 38vh; resize: vertical; line-height: 1.6; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; }
+
+.dock { position: sticky; bottom: 0; margin-top: auto; display: flex; flex-direction: column; gap: 8px; padding-top: 12px; padding-bottom: env(safe-area-inset-bottom, 0px); background: linear-gradient(to top, var(--bg) 75%, transparent); }
+.dock .btn.big { width: 100%; }
+.dock .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.dock .row2 .btn { width: 100%; padding: 0 8px; }
+
+.progress { height: 6px; border-radius: 99px; background: var(--line); overflow: hidden; }
+.progress i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .3s; }
+.stage { flex: 1; display: flex; flex-direction: column; justify-content: center; padding-block: 12px; min-height: 40vh; }
+.sentence { --rs: 2rem; font-size: var(--rs); line-height: 1.85; font-weight: 400; overflow-wrap: anywhere; }
+.w { border-radius: .3em; padding: .06em .12em; margin-inline: -.12em; -webkit-box-decoration-break: clone; box-decoration-break: clone; cursor: pointer; }
+.w.done { background: var(--done); }
+.w.now { background: var(--hl); color: var(--hl-ink); }
+.finish { display: flex; flex-direction: column; gap: 14px; align-items: flex-start; }
+.finish h3 { font-size: 1.8rem; line-height: 1.15; }
+
+.tr { --rs: 2rem; display: flex; flex-direction: column; gap: 12px; margin-top: 20px; padding: 14px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+.trLine { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.trLine p { font-size: calc(var(--rs) * .62); line-height: 1.55; overflow-wrap: anywhere; }
+#trDe:not([hidden]) + #trFa { border-top: 1px solid var(--line); padding-top: 12px; }
+#trFa .label, #trFa p { direction: rtl; text-align: right; font-family: var(--fa); }
+#trFa .label { letter-spacing: 0; text-transform: none; font-size: .9rem; }
+#trFa p { line-height: 1.95; }
+.trFoot { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.trFoot .btn { min-height: 40px; padding: 0 14px; }
+
+.sheet { position: fixed; inset: 0; z-index: 20; display: flex; align-items: flex-end; justify-content: center; background: rgba(8, 14, 22, .55); }
+.sheetBox { width: 100%; max-width: 34rem; max-height: 92%; overflow-y: auto; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px; background: var(--surface); color: var(--ink); border-radius: 20px 20px 0 0; padding: 14px max(18px, env(safe-area-inset-right, 0px)) calc(18px + env(safe-area-inset-bottom, 0px)) max(18px, env(safe-area-inset-left, 0px)); }
+.sheetBox header { display: flex; align-items: center; justify-content: space-between; }
+.sheetBox label { display: flex; justify-content: space-between; font-weight: 700; }
+.sheetBox output { color: var(--muted); font-weight: 400; font-variant-numeric: tabular-nums; }
+.sheetBox input[type=range] { width: 100%; accent-color: var(--accent); height: 32px; }
+.scale { display: flex; justify-content: space-between; color: var(--muted); font-size: .85rem; margin-top: -8px; }
+.sheetBox fieldset { border: 0; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+.sheetBox legend { font-weight: 700; padding: 0; margin-bottom: 6px; }
+.seg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.seg button { min-height: 48px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); font: 700 .95rem var(--font); cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.sheetBox select { min-height: 48px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); font: 1rem var(--font); padding: 0 10px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-camera" viewBox="0 0 24 24"><path d="M3.5 8.5h3.2l1.8-2.5h7l1.8 2.5h3.2v11h-17z"/><circle cx="12" cy="13.5" r="3.5"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h9M19 7h1M4 17h1M11 17h9"/><circle cx="16" cy="7" r="2.2"/><circle cx="8" cy="17" r="2.2"/></symbol>
+  <symbol id="i-repeat" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v5h-5"/></symbol>
+  <symbol id="i-next" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2" style="fill:currentColor;stroke:none"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5l11 7-11 7z" style="fill:currentColor;stroke:none"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M5 7h14M10 7V4.5h4V7M7 7l1 13h8l1-13"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+</svg>
+
+<input id="pick" type="file" accept="image/*" multiple hidden>
+
+<div id="app">
+
+  <section id="home">
+    <header class="top">
+      <svg class="badge" viewBox="0 0 48 48" role="img" aria-label="Khayyam">
+        <rect class="bg" width="48" height="48" rx="12"/>
+        <path class="cross" d="M18 0v48M0 24h48"/>
+        <text x="24" y="34" text-anchor="middle">K</text>
+      </svg>
+      <div>
+        <h1>Khayyam</h1>
+        <p class="sub">Dansk læsning</p>
+      </div>
+    </header>
+
+    <button id="btnScan" class="btn primary big" type="button"><svg class="i"><use href="#i-camera"/></svg><span>Scan homework</span></button>
+    <p id="scanNote" class="note" hidden></p>
+    <button id="btnPaste" class="btn ghost" type="button">Type or paste text instead</button>
+
+    <h2 id="listLabel" class="label" hidden>Saved homework</h2>
+    <ul id="list" class="list"></ul>
+    <div id="empty" class="empty">
+      <p>Nothing saved yet. Scanned homework is kept here so you can read it again.</p>
+      <button id="btnDemo" class="btn ghost" type="button">Try an example text</button>
+    </div>
+  </section>
+
+  <section id="scan" hidden>
+    <header class="bar">
+      <button id="scanBack" class="icon" type="button" aria-label="Back"><svg class="i"><use href="#i-back"/></svg></button>
+      <h2>Photos of the homework</h2>
+    </header>
+    <p class="hint">Hold the phone straight above the page in good light. Add every page, in order.</p>
+    <ul id="thumbs" class="thumbs"></ul>
+    <div class="row"><button id="btnAdd" class="btn ghost" type="button"><svg class="i"><use href="#i-plus"/></svg>Add page</button></div>
+    <div class="dock"><button id="btnRead" class="btn primary big" type="button">Read the text</button></div>
+  </section>
+
+  <section id="review" hidden>
+    <header class="bar">
+      <button id="reviewBack" class="icon" type="button" aria-label="Back"><svg class="i"><use href="#i-back"/></svg></button>
+      <h2>Check the text</h2>
+    </header>
+    <label class="label" for="title">Name</label>
+    <input id="title" class="field" maxlength="60" placeholder="For example: Dansk side 12" autocomplete="off">
+    <label class="label" for="text">Text <span id="count" class="muted"></span></label>
+    <textarea id="text" class="field area" lang="da" spellcheck="false" placeholder="Paste or type the Danish text here"></textarea>
+    <p id="status" class="note" role="status"></p>
+    <div class="row">
+      <button id="btnStopOcr" class="btn ghost" type="button" hidden>Stop</button>
+      <button id="btnRetry" class="btn ghost" type="button" hidden>Try again</button>
+    </div>
+    <p id="liveTip" class="hint" hidden>Tip: open the photo in Photos, touch and hold the text, tap Select All, then Copy, and paste it here.</p>
+    <div class="dock"><button id="btnSave" class="btn primary big" type="button" disabled>Save and read</button></div>
+  </section>
+
+  <section id="reader" hidden>
+    <header class="bar">
+      <button id="rBack" class="icon" type="button" aria-label="Back to list"><svg class="i"><use href="#i-back"/></svg></button>
+      <div class="grow"><h2 id="rTitle"></h2><p id="rProg" class="sub"></p></div>
+      <button id="btnSettings" class="icon" type="button" aria-label="Reading settings"><svg class="i"><use href="#i-sliders"/></svg></button>
+    </header>
+    <div class="progress" aria-hidden="true"><i id="bar"></i></div>
+    <p id="voiceWarn" class="warn" hidden>No Danish voice found on this iPhone. Add one in Settings &gt; Accessibility &gt; Spoken Content &gt; Voices &gt; Danish, then reopen this page.</p>
+    <p id="nbNote" class="warn" hidden>This voice cannot mark words inside a sentence, so the words are read one by one.</p>
+    <div class="stage">
+      <p id="sentence" class="sentence" lang="da"></p>
+      <div id="tr" class="tr" hidden>
+        <div id="trDe" class="trLine"><span class="label">Deutsch</span><p id="trDeT" lang="de"></p></div>
+        <div id="trFa" class="trLine"><span class="label" lang="fa">فارسی</span><p id="trFaT" lang="fa" dir="rtl"></p></div>
+        <div id="trFoot" class="trFoot" hidden><p id="trNote" class="note" role="status"></p><button id="btnTrRetry" class="btn ghost" type="button">Try again</button></div>
+      </div>
+      <div id="done" class="finish" hidden>
+        <h3 id="doneMsg">Well done, Khayyam!</h3>
+        <p id="doneSub" class="muted"></p>
+        <div class="row">
+          <button id="btnAgain" class="btn ghost" type="button">Read again</button>
+          <button id="btnHome" class="btn primary" type="button">Back to the list</button>
+        </div>
+      </div>
+    </div>
+    <div id="rdock" class="dock">
+      <button id="btnPrev" class="btn link" type="button" hidden>Previous sentence</button>
+      <button id="btnStart" class="btn primary big" type="button"><svg class="i"><use href="#i-play"/></svg><span id="startLabel">Start reading</span></button>
+      <button id="btnStop" class="btn stop big" type="button" hidden><svg class="i"><use href="#i-stop"/></svg>Stop</button>
+      <div id="waitRow" class="row2" hidden>
+        <button id="btnRepeat" class="btn ghost big" type="button"><svg class="i"><use href="#i-repeat"/></svg>Repeat</button>
+        <button id="btnNext" class="btn primary big" type="button"><span id="nextLabel">Next</span><svg class="i"><use href="#i-next"/></svg></button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<div id="sheet" class="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+  <div class="sheetBox">
+    <header>
+      <h2 id="sheetTitle">Reading settings</h2>
+      <button id="sheetClose" class="icon" type="button" aria-label="Close"><svg class="i"><use href="#i-x"/></svg></button>
+    </header>
+    <div>
+      <label for="rate"><span>Speed</span><output id="rateOut"></output></label>
+      <input id="rate" type="range" min="0.1" max="1" step="0.05">
+      <div class="scale"><span>Very slow</span><span>Normal</span></div>
+    </div>
+    <fieldset>
+      <legend>Reading style</legend>
+      <div class="seg">
+        <button id="segFlow" type="button" aria-pressed="true">Whole sentence</button>
+        <button id="segWord" type="button" aria-pressed="false">Word by word</button>
+      </div>
+    </fieldset>
+    <div id="gapRow">
+      <label for="gap"><span>Pause between words</span><output id="gapOut"></output></label>
+      <input id="gap" type="range" min="0" max="2000" step="100">
+    </div>
+    <fieldset>
+      <legend>Show translation</legend>
+      <div class="seg">
+        <button id="tgDe" type="button" aria-pressed="true">Deutsch</button>
+        <button id="tgFa" type="button" aria-pressed="true" lang="fa" style="font-family:var(--fa)">فارسی</button>
+      </div>
+    </fieldset>
+    <label for="voice" style="display:block">Voice</label>
+    <select id="voice"></select>
+    <div class="row">
+      <button id="sizeDown" class="btn ghost" type="button" aria-label="Smaller text">A−</button>
+      <button id="sizeUp" class="btn ghost" type="button" aria-label="Larger text">A+</button>
+      <button id="btnTest" class="btn ghost" type="button">Hear a test sentence</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var LS = {
+    get: function (k, d) { try { var v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  };
+  var sleep = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
+
+  /*SPLIT_START*/
+  var ABBR = /(?:^|[\s(])(?:f\.eks|bl\.a|osv|kl|nr|dvs|m\.m|ca|mv|jf|evt|ifm|pga|hr|fru|dr|st|mht|vha|kr|mio|mia|tlf|jvf|incl|ekskl|fx)\.$/i;
+  function splitSentences(text) {
+    var lines = String(text || '').replace(/\r/g, '').split('\n')
+      .map(function (l) { return l.replace(/\s+/g, ' ').trim(); }).filter(Boolean);
+    var blocks = [];
+    lines.forEach(function (line) {
+      var prev = blocks[blocks.length - 1];
+      if (prev && !/[.!?…:;"”»)]$/.test(prev) && /^[a-zæøå]/.test(line)) blocks[blocks.length - 1] = prev + ' ' + line;
+      else blocks.push(line);
+    });
+    var out = [];
+    blocks.forEach(function (b) {
+      var parts = (b.match(/[^.!?…]+(?:[.!?…]+["”»')\]]*|$)/g) || [b])
+        .filter(function (p) { return p.trim(); });
+      var buf = '';
+      for (var i = 0; i < parts.length; i++) {
+        buf += parts[i];
+        var cur = buf.trim();
+        var next = (parts[i + 1] || '').trim();
+        var ended = /[.!?…]["”»')\]]*$/.test(cur);
+        var hold = ended && next && (/^[a-zæøå]/.test(next) || ABBR.test(cur) || /^\d+[.)]$/.test(cur));
+        if (ended && !hold) { out.push(cur); buf = ''; }
+      }
+      if (buf.trim()) out.push(buf.trim());
+    });
+    return out;
+  }
+  /*SPLIT_END*/
+
+  var DEMO = 'Hej! Jeg hedder Khayyam. Jeg bor i Danmark, og jeg går i skole. I dag skal jeg læse en lille tekst på dansk.\n\nVi har en stor have med grønne træer. Æblerne er røde, og solen skinner. Det er sjovt at lære nye ord.';
+
+  var S = {
+    items: LS.get('lmk.items', []),
+    nb: LS.get('lmk.nb', {}),
+    pages: [], sample: undefined, lim: null, col: null,
+    cur: null, sents: [], idx: 0, state: 'idle', voices: [], voicesChecked: false,
+    ctl: null, confirm: null, unlocked: false, ocrMode: false, trJob: null, trPart: null, trErr: ''
+  };
+  var set = Object.assign({ rate: 0.3, mode: 'flow', gap: 600, voice: '', size: 1, showDe: true, showFa: true }, LS.get('lmk.set', {}));
+  function saveSet() { LS.set('lmk.set', set); }
+
+  var el = {};
+  ['home','scan','review','reader','btnScan','scanNote','btnPaste','listLabel','list','empty','btnDemo','scanBack','thumbs','btnAdd','btnRead',
+   'reviewBack','title','text','count','status','btnStopOcr','btnRetry','liveTip','btnSave','rBack','rTitle','rProg','btnSettings','bar',
+   'voiceWarn','nbNote','sentence','done','doneSub','btnAgain','btnHome','rdock','btnPrev','btnStart','startLabel','btnStop','waitRow','btnRepeat',
+   'btnNext','nextLabel','sheet','sheetClose','rate','rateOut','segFlow','segWord','gapRow','gap','gapOut','voice','sizeDown','sizeUp','btnTest','pick',
+   'tr','trDe','trFa','trDeT','trFaT','trFoot','trNote','btnTrRetry','tgDe','tgFa'
+  ].forEach(function (id) { el[id] = $(id); });
+
+  /* ---------- screens ---------- */
+  function show(name) {
+    ['home', 'scan', 'review', 'reader'].forEach(function (n) { el[n].hidden = n !== name; });
+    if (name !== 'reader') { stopSpeech(); unwake(); }
+    window.scrollTo(0, 0);
+  }
+  function fmtDate(ms) { try { return new Date(ms).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }); } catch (e) { return ''; } }
+  function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
+  /* ---------- saved homework (private db, mirrored on this phone) ---------- */
+  function renderList() {
+    el.list.replaceChildren();
+    el.empty.hidden = S.items.length > 0;
+    el.listLabel.hidden = S.items.length === 0;
+    S.items.forEach(function (it) {
+      var li = document.createElement('li'); li.className = 'row-item';
+      var open = document.createElement('button'); open.type = 'button'; open.className = 'item';
+      var t = document.createElement('strong'); t.textContent = it.title;
+      var m = document.createElement('span'); m.className = 'muted';
+      m.textContent = splitSentences(it.text).length + ' sentences · ' + fmtDate(it.created);
+      open.append(t, m);
+      open.addEventListener('click', function () { openReader(it); });
+      var del = document.createElement('button'); del.type = 'button';
+      if (S.confirm === it.id) {
+        del.className = 'icon sure'; del.textContent = 'Delete?';
+      } else {
+        del.className = 'icon'; del.setAttribute('aria-label', 'Delete ' + it.title);
+        del.innerHTML = '<svg class="i"><use href="#i-trash"/></svg>';
+      }
+      del.addEventListener('click', function () {
+        if (S.confirm === it.id) { removeItem(it.id); return; }
+        S.confirm = it.id; renderList();
+        setTimeout(function () { if (S.confirm === it.id) { S.confirm = null; renderList(); } }, 3000);
+      });
+      li.append(open, del); el.list.append(li);
+    });
+  }
+  function removeItem(id) {
+    S.confirm = null;
+    S.items = S.items.filter(function (i) { return i.id !== id; });
+    LS.set('lmk.items', S.items); renderList();
+    if (S.col) S.col.doc(id).delete().catch(function () {});
+  }
+  function mergeRemote(remote, fromCache) {
+    var ids = {}; remote.forEach(function (r) { ids[r.id] = 1; });
+    var localOnly = S.items.filter(function (i) { return !ids[i.id]; });
+    if (!fromCache) localOnly.forEach(function (i) {
+      S.col.doc(i.id).set({ title: i.title, text: i.text, created: i.created, tr: i.tr || null }).catch(function () {});
+    });
+    S.items = remote.concat(localOnly).sort(function (a, b) { return b.created - a.created; });
+    LS.set('lmk.items', S.items); renderList();
+  }
+  function subscribe() {
+    S.col.orderBy('created', 'desc').onSnapshot(function (snap) {
+      var remote = snap.docs.map(function (d) { var v = d.data() || {}; return { id: d.id, title: v.title || 'Homework', text: v.text || '', created: v.created || 0, tr: Array.isArray(v.tr) ? v.tr : null }; });
+      if (snap.metadata.fromCache && remote.length === 0) return;
+      mergeRemote(remote, snap.metadata.fromCache);
+    }, function () { /* keep the copy on this phone */ });
+  }
+
+  /* ---------- capabilities ---------- */
+  function cap(name) {
+    try { return window.claude && window.claude.use ? window.claude.use(name) : Promise.resolve(null); }
+    catch (e) { return Promise.resolve(null); }
+  }
+  function scanAvailable() { return true; }
+  function updateScanNote() {
+    if (S.sample === undefined) { el.scanNote.hidden = true; return; }
+    el.scanNote.hidden = false;
+    el.scanNote.textContent = S.sample
+      ? 'Claude reads the photos and translates into German and Farsi.'
+      : 'Photos are read on this device. Printed text works best. Translations use a free online service.';
+    el.btnScan.disabled = false;
+  }
+  cap('sample').then(function (s) {
+    S.sample = s;
+    if (!s) { updateScanNote(); return; }
+    return s.limits().then(function (l) { S.lim = l; }, function () { S.lim = null; }).then(updateScanNote);
+  });
+  Promise.all([cap('db'), cap('user')]).then(function (r) {
+    var db = r[0], user = r[1];
+    if (!db || !user) return;
+    return user.id().then(function (id) {
+      if (!id) return;
+      S.col = db.collection('data/users/' + id);
+      subscribe();
+    });
+  }).catch(function () {});
+
+  /* ---------- photos ---------- */
+  function resetPages() { S.pages.forEach(function (p) { URL.revokeObjectURL(p.url); }); S.pages = []; }
+  function renderThumbs() {
+    el.thumbs.replaceChildren();
+    S.pages.forEach(function (p, i) {
+      var li = document.createElement('li');
+      var im = document.createElement('img'); im.src = p.url; im.alt = 'Page ' + (i + 1);
+      var n = document.createElement('span'); n.className = 'n'; n.textContent = 'Page ' + (i + 1);
+      var x = document.createElement('button'); x.type = 'button'; x.setAttribute('aria-label', 'Remove page ' + (i + 1));
+      x.innerHTML = '<svg class="i"><use href="#i-x"/></svg>';
+      x.addEventListener('click', function () {
+        URL.revokeObjectURL(p.url); S.pages.splice(i, 1);
+        if (!S.pages.length) { show('home'); } else renderThumbs();
+      });
+      li.append(im, n, x); el.thumbs.append(li);
+    });
+    el.btnRead.disabled = S.pages.length === 0;
+  }
+  el.btnScan.addEventListener('click', function () {
+    if (!scanAvailable()) { updateScanNote(); return; }
+    el.pick.click();
+  });
+  el.btnAdd.addEventListener('click', function () { el.pick.click(); });
+  el.pick.addEventListener('change', function () {
+    var files = Array.prototype.slice.call(el.pick.files || []);
+    el.pick.value = '';
+    if (!files.length) return;
+    files.forEach(function (f) { S.pages.push({ file: f, url: URL.createObjectURL(f) }); });
+    renderThumbs(); show('scan');
+  });
+  el.scanBack.addEventListener('click', function () { resetPages(); show('home'); });
+
+  function loadImg(file) {
+    return new Promise(function (res, rej) {
+      var url = URL.createObjectURL(file), im = new Image();
+      im.onload = function () { res({ im: im, url: url }); };
+      im.onerror = function () { URL.revokeObjectURL(url); rej(new Error('image')); };
+      im.src = url;
+    });
+  }
+  /* A tall page goes up as two overlapping halves so small print keeps its detail. */
+  function prep(page, canSplit) {
+    return loadImg(page.file).then(function (r) {
+      var im = r.im, w = im.naturalWidth, h = im.naturalHeight;
+      var parts = (canSplit && h / w > 1.15) ? [[0, 0.56], [0.44, 1]] : [[0, 1]];
+      var jobs = parts.map(function (pr) {
+        var sy = Math.round(h * pr[0]), sh = Math.round(h * (pr[1] - pr[0]));
+        var k = Math.min(1, Math.sqrt(1.5e6 / (w * sh)));
+        var c = document.createElement('canvas'); c.width = Math.round(w * k); c.height = Math.round(sh * k);
+        c.getContext('2d').drawImage(im, 0, sy, w, sh, 0, 0, c.width, c.height);
+        return new Promise(function (ok) { c.toBlob(ok, 'image/jpeg', 0.9); });
+      });
+      return Promise.all(jobs).then(function (blobs) { URL.revokeObjectURL(r.url); return { blobs: blobs }; });
+    });
+  }
+  function ocrPrompt(lines) {
+    return 'You are a careful transcriber of Danish school homework.\n' +
+      'The attached images are photos of printed Danish text, in reading order:\n' + lines.join('\n') + '\n\n' +
+      'Write out ALL the Danish text exactly as printed, with æ, ø, å, capital letters, numbers and punctuation. Do not translate, correct, summarise or add anything.\n' +
+      'Rules:\n' +
+      '- Keep the reading order. Join the lines of one paragraph into a single line and put a blank line between paragraphs.\n' +
+      '- Put each heading, each exercise number with its text (for example "1." or "a)"), and each list item on its own line.\n' +
+      '- When a bottom part repeats lines from the top part above it, write those lines only once.\n' +
+      '- Ignore page numbers, headers and footers, pictures, and pencil or pen marks written by a child, unless the whole page is handwritten.\n' +
+      '- If a word is unclear, give your best reading. Never leave gaps.\n' +
+      'Output only the transcribed text and nothing else.';
+  }
+  function tidy(t) { return String(t || '').replace(/\r/g, '').replace(/^```[a-z]*\n?/i, '').replace(/```\s*$/, '').replace(/\n{3,}/g, '\n\n').trim(); }
+  function ocrError(e) {
+    switch (e && e.code) {
+      case 'not_granted': return 'Claude access was declined for this page, so reading photos is off. Paste or type the text instead.';
+      case 'rate_limited': return 'Too many requests, or your Claude usage limit is reached. Try again in a little while.';
+      case 'images_unavailable': return 'This view cannot send photos. Paste or type the text instead.';
+      case 'image_rejected': return 'One photo could not be used. Take it again in good light.';
+      case 'session_expired': return 'Please sign in to Claude again, then try again.';
+      case 'refused': return 'That photo could not be read. Try a clearer one.';
+      default: return 'Reading the photos failed. Check the connection and try again.';
+    }
+  }
+  function setLoading(on) {
+    el.text.readOnly = on; el.title.disabled = on;
+    el.btnStopOcr.hidden = !on; el.btnRetry.hidden = true;
+    updateSave(on);
+  }
+  function updateSave(loading) {
+    var n = splitSentences(el.text.value).length;
+    el.count.textContent = n ? '· ' + n + (n === 1 ? ' sentence' : ' sentences') : '';
+    el.btnSave.disabled = !!loading || !el.text.value.trim();
+  }
+  /* Standalone reading of photos (no Claude): Tesseract with the Danish model, run on this device. */
+  var TESS = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
+  function loadScript(src) {
+    return new Promise(function (res, rej) {
+      if (window.Tesseract) return res();
+      var s = document.createElement('script'); s.src = src;
+      s.onload = function () { res(); }; s.onerror = function () { rej({ code: 'load' }); };
+      document.head.append(s);
+    });
+  }
+  function kill(w) { try { var p = w && w.terminate(); if (p && p.catch) p.catch(function () {}); } catch (e) {} }
+  function prepLocal(page) {
+    return loadImg(page.file).then(function (r) {
+      var im = r.im, w = im.naturalWidth, h = im.naturalHeight, k = Math.min(1, 3000 / Math.max(w, h));
+      var c = document.createElement('canvas'); c.width = Math.round(w * k); c.height = Math.round(h * k);
+      var g = c.getContext('2d'); g.drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(r.url);
+      var d = g.getImageData(0, 0, c.width, c.height), p = d.data, n = p.length / 4, hist = new Uint32Array(256), i;
+      for (i = 0; i < n; i++) { var y = (p[i * 4] * 0.299 + p[i * 4 + 1] * 0.587 + p[i * 4 + 2] * 0.114) | 0; p[i * 4] = y; hist[y]++; }
+      var lo = 0, hi = 255, a = 0;
+      while (lo < 255 && (a += hist[lo]) < n * 0.02) lo++;
+      a = 0; while (hi > 0 && (a += hist[hi]) < n * 0.02) hi--;
+      if (hi - lo < 20) { lo = 0; hi = 255; }
+      var sc = 255 / (hi - lo);
+      for (i = 0; i < n; i++) { var v = Math.max(0, Math.min(255, ((p[i * 4] - lo) * sc) | 0)); p[i * 4] = p[i * 4 + 1] = p[i * 4 + 2] = v; p[i * 4 + 3] = 255; }
+      g.putImageData(d, 0, 0);
+      return c;
+    });
+  }
+  function tidyLocal(t) {
+    return String(t || '').replace(/\r/g, '').replace(/-\n(?=[a-zæøå])/g, '')
+      .split(/\n\s*\n/).map(function (p) { return p.replace(/\s*\n\s*/g, ' ').trim(); })
+      .filter(Boolean).join('\n\n');
+  }
+  function ocrDone(acc) {
+    S.ctl = null; setLoading(false);
+    if (!acc) { el.status.textContent = 'No text was found. Try again with a clearer photo.'; el.btnRetry.hidden = false; return; }
+    el.title.value = acc.split('\n')[0].trim().slice(0, 40) || ('Homework ' + fmtDate(Date.now()));
+    el.status.textContent = 'Check the text and fix any mistakes before reading.';
+    updateSave(false);
+  }
+  function ocrFail(msg, acc) {
+    S.ctl = null; setLoading(false); el.status.textContent = msg; el.btnRetry.hidden = false;
+    if (acc) { el.text.value = acc; updateSave(false); }
+  }
+  function runLocalOcr(ctl) {
+    var worker = null, acc = '', pi = 0, n = S.pages.length;
+    ctl.signal.addEventListener('abort', function () { kill(worker); });
+    el.status.textContent = 'Loading text recognition…';
+    loadScript(TESS).then(function () {
+      return Tesseract.createWorker('dan', 1, { logger: function (m) {
+        if (m.status === 'recognizing text' && pi) el.status.textContent = 'Reading page ' + pi + ' of ' + n + '… ' + Math.round((m.progress || 0) * 100) + '%';
+        else if (!pi) el.status.textContent = 'Preparing Danish text recognition. The first time takes a minute…';
+      } });
+    }).then(function (w) {
+      worker = w;
+      if (ctl.signal.aborted) throw { code: 'cancelled' };
+      return S.pages.reduce(function (p, pg) {
+        return p.then(function () {
+          if (ctl.signal.aborted) throw { code: 'cancelled' };
+          pi++; el.status.textContent = 'Reading page ' + pi + ' of ' + n + '…';
+          return prepLocal(pg).then(function (cv) { return worker.recognize(cv); }).then(function (r) {
+            acc = (acc ? acc + '\n\n' : '') + tidyLocal(r.data.text); el.text.value = acc; updateSave(true);
+          });
+        });
+      }, Promise.resolve());
+    }).then(function () { kill(worker); ocrDone(acc); })
+      .catch(function (e) {
+        kill(worker);
+        if (ctl.signal.aborted || (e && e.code === 'cancelled')) { el.text.value = ''; S.ctl = null; setLoading(false); show('scan'); return; }
+        ocrFail(e && e.code === 'load' ? 'Could not load text recognition. Check the internet connection and try again.' : 'Reading the photos failed. Try again, or paste the text.', acc);
+      });
+  }
+
+  function runOcr() {
+    show('review'); S.ocrMode = true; el.liveTip.hidden = true;
+    el.text.value = ''; el.title.value = ''; el.status.textContent = 'Preparing the photos…';
+    setLoading(true);
+    var ctl = S.ctl = new AbortController();
+    if (!S.sample) { runLocalOcr(ctl); return; }
+    var maxN = S.lim && S.lim.images ? S.lim.images.maxCount : 1;
+    var acc = '';
+    var prepared = [];
+    var chain = S.pages.reduce(function (p, pg) {
+      return p.then(function () { return prep(pg, maxN >= 2); }).then(function (r) { prepared.push(r); });
+    }, Promise.resolve());
+    chain.then(function () {
+      var chunks = [], cur = null;
+      prepared.forEach(function (pg, pi) {
+        pg.index = pi + 1;
+        if (!cur || cur.count + pg.blobs.length > maxN) { cur = { pages: [], count: 0 }; chunks.push(cur); }
+        cur.pages.push(pg); cur.count += pg.blobs.length;
+      });
+      return chunks.reduce(function (p, ch, ci) {
+        return p.then(function () {
+          if (ctl.signal.aborted) return;
+          el.status.textContent = chunks.length > 1 ? 'Reading photos ' + (ci + 1) + ' of ' + chunks.length + '…' : 'Reading the text…';
+          var n = 0, lines = [], blobs = [];
+          ch.pages.forEach(function (pg) {
+            pg.blobs.forEach(function (b, k) {
+              n++; blobs.push(b);
+              lines.push(pg.blobs.length === 1 ? 'Image ' + n + ': page ' + pg.index + '.'
+                : k === 0 ? 'Image ' + n + ': page ' + pg.index + ', top part.'
+                : 'Image ' + n + ': page ' + pg.index + ', bottom part, which repeats the last lines of the top part.');
+            });
+          });
+          return S.sample(ocrPrompt(lines), {
+            images: blobs, signal: ctl.signal, cache: false,
+            onText: function (u) { el.text.value = (acc ? acc + '\n\n' : '') + u.text; el.text.scrollTop = el.text.scrollHeight; updateSave(true); }
+          }).then(function (res) { acc = (acc ? acc + '\n\n' : '') + tidy(res.text); el.text.value = acc; });
+        });
+      }, Promise.resolve());
+    }).then(function () {
+      S.ctl = null; setLoading(false);
+      if (!acc) { el.status.textContent = 'No text was found. Try again with a clearer photo.'; el.btnRetry.hidden = false; return; }
+      var first = acc.split('\n')[0].trim().slice(0, 40);
+      el.title.value = first || ('Homework ' + fmtDate(Date.now()));
+      el.status.textContent = 'Check the text and fix any mistakes before reading.';
+      updateSave(false);
+    }).catch(function (e) {
+      S.ctl = null; setLoading(false);
+      if (e && e.code === 'cancelled') { el.text.value = ''; show('scan'); return; }
+      el.status.textContent = ocrError(e);
+      el.btnRetry.hidden = false;
+      if (acc) { el.text.value = acc; updateSave(false); }
+    });
+  }
+  el.btnRead.addEventListener('click', function () { runOcr(); });
+  el.btnRetry.addEventListener('click', function () { if (S.pages.length) runOcr(); });
+  el.btnStopOcr.addEventListener('click', function () { if (S.ctl) S.ctl.abort(); });
+  el.reviewBack.addEventListener('click', function () {
+    if (S.ctl) S.ctl.abort();
+    if (S.ocrMode && S.pages.length) show('scan'); else { resetPages(); show('home'); }
+  });
+  el.text.addEventListener('input', function () { updateSave(false); });
+  el.btnPaste.addEventListener('click', function () {
+    S.ocrMode = false; resetPages();
+    el.text.value = ''; el.title.value = ''; el.title.disabled = false; el.text.readOnly = false;
+    el.status.textContent = ''; el.btnStopOcr.hidden = true; el.btnRetry.hidden = true;
+    el.liveTip.hidden = false; updateSave(false); show('review');
+  });
+  el.btnSave.addEventListener('click', function () {
+    var text = el.text.value.trim(); if (!text) return;
+    var it = { id: uid(), title: el.title.value.trim() || ('Homework ' + fmtDate(Date.now())), text: text, created: Date.now() };
+    S.items.unshift(it); LS.set('lmk.items', S.items); renderList();
+    if (S.col) S.col.doc(it.id).set({ title: it.title, text: it.text, created: it.created }).catch(function () {});
+    resetPages(); openReader(it);
+  });
+
+  /* ---------- speech ---------- */
+  var tok = 0, lock = null;
+  function haveSpeech() { return 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window; }
+  function stopSpeech() { tok++; try { if (haveSpeech()) speechSynthesis.cancel(); } catch (e) {} }
+  function unlockSpeech() {
+    if (S.unlocked || !haveSpeech()) return;
+    S.unlocked = true;
+    try { var u = new SpeechSynthesisUtterance(''); u.volume = 0; speechSynthesis.speak(u); } catch (e) {}
+  }
+  function voiceObj() {
+    for (var i = 0; i < S.voices.length; i++) if (S.voices[i].voiceURI === set.voice) return S.voices[i];
+    return S.voices[0] || null;
+  }
+  function nbKey() { var v = voiceObj(); return v ? v.voiceURI : 'default'; }
+  function useWords() { return set.mode === 'word' || !!S.nb[nbKey()]; }
+  function loadVoices() {
+    if (!haveSpeech()) return;
+    var all = speechSynthesis.getVoices() || [];
+    S.voices = all.filter(function (v) { return /^da([-_]|$)/i.test(v.lang); });
+    S.voices.sort(function (a, b) { return (/premium|enhanced/i.test(b.name) ? 1 : 0) - (/premium|enhanced/i.test(a.name) ? 1 : 0); });
+    el.voice.replaceChildren();
+    S.voices.forEach(function (v) {
+      var o = document.createElement('option'); o.value = v.voiceURI; o.textContent = v.name + ' (' + v.lang + ')'; el.voice.append(o);
+    });
+    if (!S.voices.length) { var o = document.createElement('option'); o.textContent = 'No Danish voice found'; el.voice.append(o); }
+    var cur = voiceObj(); if (cur) el.voice.value = cur.voiceURI;
+    el.voiceWarn.hidden = !(S.voicesChecked && !S.voices.length);
+    el.nbNote.hidden = !S.nb[nbKey()];
+  }
+  if (haveSpeech()) {
+    try { speechSynthesis.addEventListener('voiceschanged', loadVoices); } catch (e) { speechSynthesis.onvoiceschanged = loadVoices; }
+    loadVoices();
+    setTimeout(function () { S.voicesChecked = true; loadVoices(); }, 1200);
+  }
+  function utter(text) {
+    var u = new SpeechSynthesisUtterance(text), v = voiceObj();
+    if (v) { u.voice = v; u.lang = v.lang; } else u.lang = 'da-DK';
+    u.rate = set.rate; u.pitch = 1; u.volume = 1;
+    return u;
+  }
+  function sayOne(text, my) {
+    return new Promise(function (res) {
+      if (my !== tok) return res();
+      var u = utter(text), fin = false, t;
+      function end() { if (fin) return; fin = true; clearTimeout(t); res(); }
+      t = setTimeout(end, 8000 + text.length * 500 / Math.max(set.rate, 0.2));
+      u.onend = end; u.onerror = end;
+      try { speechSynthesis.speak(u); } catch (e) { end(); }
+    });
+  }
+  var clean = function (w) { return w.replace(/[«»"“”„()\[\]]/g, '').trim(); };
+  var speakable = function (w) { return /[\p{L}\p{N}]/u.test(w); };
+
+  function mark(i) {
+    var ws = el.sentence.children;
+    for (var k = 0; k < ws.length; k++) {
+      ws[k].classList.toggle('now', k === i);
+      ws[k].classList.toggle('done', k < i);
+    }
+  }
+  function speakWords(my) {
+    var ws = S.sents[S.idx].words;
+    var i = 0;
+    function step() {
+      if (my !== tok) return Promise.resolve(false);
+      if (i >= ws.length) return Promise.resolve(true);
+      var k = i++; mark(k);
+      var w = clean(ws[k]);
+      if (!speakable(w)) return step();
+      return sayOne(w, my).then(function () { return my === tok ? sleep(set.gap) : null; }).then(step);
+    }
+    return step();
+  }
+  function speakFlow(my) {
+    return new Promise(function (res) {
+      var ws = S.sents[S.idx].words.map(clean);
+      var starts = [], p = 0;
+      ws.forEach(function (w) { starts.push(p); p += w.length + 1; });
+      var text = ws.join(' ');
+      var u = utter(text), got = false, fin = false, t1, t2;
+      function end(r) { if (fin) return; fin = true; clearTimeout(t1); clearTimeout(t2); res(r); }
+      t2 = setTimeout(function () { end('done'); }, 20000 + text.length * 600 / Math.max(set.rate, 0.2));
+      u.onstart = function () {
+        t1 = setTimeout(function () {
+          if (!got && !fin) { end('nobound'); try { speechSynthesis.cancel(); } catch (e) {} }
+        }, 2500);
+      };
+      u.onboundary = function (e) {
+        if (my !== tok) return;
+        if (e.name && e.name !== 'word') return;
+        got = true; clearTimeout(t1);
+        var i = 0; while (i + 1 < starts.length && starts[i + 1] <= e.charIndex) i++;
+        mark(i);
+      };
+      u.onend = function () { end('done'); };
+      u.onerror = function () { end('done'); };
+      try { speechSynthesis.speak(u); } catch (e) { end('done'); }
+    });
+  }
+  function play() {
+    if (!haveSpeech()) { el.nbNote.hidden = false; el.nbNote.textContent = 'This view cannot read aloud. Open the page in Safari or the Claude app.'; return; }
+    var my = ++tok;
+    try { speechSynthesis.cancel(); } catch (e) {}
+    unlockSpeech();
+    setState('speaking'); mark(-1); wake();
+    sleep(120).then(function () {
+      if (my !== tok) return;
+      if (useWords()) return speakWords(my);
+      return speakFlow(my).then(function (r) {
+        if (my !== tok) return false;
+        if (r === 'nobound') {
+          S.nb[nbKey()] = true; LS.set('lmk.nb', S.nb); el.nbNote.hidden = false;
+          return sleep(300).then(function () { return speakWords(my); });
+        }
+        return true;
+      });
+    }).then(function (ok) {
+      if (my !== tok || !ok) return;
+      mark(999); setState('waiting');
+    });
+  }
+  function speakSingle(i) {
+    if (!haveSpeech()) return;
+    var my = ++tok;
+    try { speechSynthesis.cancel(); } catch (e) {}
+    unlockSpeech(); mark(i);
+    sleep(120).then(function () { return sayOne(clean(S.sents[S.idx].words[i]), my); })
+      .then(function () { if (my === tok) mark(-1); });
+  }
+  function wake() {
+    try {
+      if (navigator.wakeLock && !lock) navigator.wakeLock.request('screen').then(function (l) {
+        lock = l; l.addEventListener('release', function () { lock = null; });
+      }, function () {});
+    } catch (e) {}
+  }
+  function unwake() { try { if (lock) lock.release(); } catch (e) {} lock = null; }
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden && !el.reader.hidden && S.state === 'speaking') { stopSpeech(); mark(-1); setState('waiting'); }
+  });
+
+  /* ---------- translations: German and Farsi under every sentence ---------- */
+  function trError(e) {
+    switch (e && e.code) {
+      case 'not_granted': return 'Translation needs Claude access, which was declined.';
+      case 'rate_limited': return 'Too many requests, or your Claude usage limit is reached. Try again later.';
+      case 'mm': return 'The free translation service is busy or its daily limit is used. Try again later.';
+      default: return 'Translation failed. Check the connection and try again.';
+    }
+  }
+  function mmOne(text, lang) {
+    var url = 'https://api.mymemory.translated.net/get?q=' + encodeURIComponent(text.slice(0, 480)) + '&langpair=da|' + lang;
+    return fetch(url).then(function (r) { return r.json(); }).then(function (j) {
+      var t = j && j.responseData && j.responseData.translatedText;
+      if (!t || Number(j.responseStatus) !== 200 || /MYMEMORY WARNING|QUERY LENGTH LIMIT|INVALID/i.test(t)) throw { code: 'mm' };
+      return new DOMParser().parseFromString(t, 'text/html').documentElement.textContent;
+    });
+  }
+  function trLocal(sents, out) {
+    return sents.reduce(function (p, s) {
+      return p.then(function () { return mmOne(s.text, 'de'); }).then(function (de) {
+        return mmOne(s.text, 'fa').then(function (fa) { out.push({ de: de, fa: fa }); renderTr(); });
+      });
+    }, Promise.resolve());
+  }
+  function trClaude(sents, out) {
+    var chunks = [];
+    for (var i = 0; i < sents.length; i += 15) chunks.push(sents.slice(i, i + 15));
+    return chunks.reduce(function (p, ch) {
+      return p.then(function () {
+        var list = ch.map(function (s, k) { return (k + 1) + '. ' + s.text; }).join('\n');
+        return S.sample.json(
+          'Translate these Danish sentences from a child\'s school text. For each one give a natural German translation and a natural Persian (Farsi, Persian script, as written in Iran) translation. ' +
+          'Keep the wording simple and keep names unchanged. Add no notes.\n' +
+          'Reply with only a JSON array of exactly ' + ch.length + ' objects {"de": "...", "fa": "..."} in the same order.\n\n' + list,
+          { cache: { gcTime: 3600000 } }
+        ).then(function (arr) {
+          ch.forEach(function (_, k) { var o = (arr && arr[k]) || {}; out.push({ de: String(o.de || ''), fa: String(o.fa || '') }); });
+          renderTr();
+        });
+      });
+    }, Promise.resolve());
+  }
+  function persist(it) {
+    if (!it.id) return;
+    var cur = S.items.filter(function (i) { return i.id === it.id; })[0];
+    if (cur) cur.tr = it.tr;
+    LS.set('lmk.items', S.items);
+    if (S.col) S.col.doc(it.id).set({ title: it.title, text: it.text, created: it.created, tr: it.tr }).catch(function () {});
+  }
+  function ensureTr() {
+    var it = S.cur; if (!it) return;
+    var sents = S.sents;
+    if (it.tr && it.tr.length === sents.length) { renderTr(); return; }
+    if (S.trJob === it || (!set.showDe && !set.showFa)) { renderTr(); return; }
+    var out = []; S.trPart = out; S.trErr = ''; S.trJob = it; renderTr();
+    (S.sample ? trClaude(sents, out) : trLocal(sents, out)).then(function () {
+      it.tr = out; persist(it);
+    }).catch(function (e) { S.trErr = trError(e); }).then(function () {
+      if (S.trJob === it) S.trJob = null;
+      renderTr();
+    });
+  }
+  function renderTr() {
+    var show = !!S.cur && !el.sentence.hidden && (set.showDe || set.showFa);
+    el.tr.hidden = !show;
+    if (!show) return;
+    var busy = S.trJob === S.cur;
+    var list = (S.cur.tr && S.cur.tr.length === S.sents.length) ? S.cur.tr : (S.trPart || []);
+    var t = list[S.idx] || {};
+    el.trDe.hidden = !set.showDe; el.trFa.hidden = !set.showFa;
+    el.trDeT.textContent = t.de || (busy ? 'Translating…' : '–');
+    el.trFaT.textContent = t.fa || (busy ? 'در حال ترجمه…' : '–');
+    el.trNote.textContent = S.trErr;
+    el.trFoot.hidden = !S.trErr;
+  }
+  el.btnTrRetry.addEventListener('click', function () { S.trErr = ''; ensureTr(); });
+
+  /* ---------- reader ---------- */
+  function savePos(n) { if (S.cur && S.cur.id) LS.set('lmk.pos.' + S.cur.id, n); }
+  function openReader(item) {
+    var sents = splitSentences(item.text).map(function (s) { return { text: s, words: s.split(/\s+/).filter(Boolean) }; });
+    if (!sents.length) return;
+    S.cur = item; S.sents = sents; S.trPart = null; S.trErr = '';
+    var p = item.id ? LS.get('lmk.pos.' + item.id, 0) : 0;
+    S.idx = (typeof p === 'number' && p >= 0 && p < sents.length) ? p : 0;
+    el.rTitle.textContent = item.title;
+    el.voiceWarn.hidden = !(S.voicesChecked && haveSpeech() && !S.voices.length);
+    el.nbNote.hidden = !S.nb[nbKey()];
+    show('reader'); renderSentence(); setState('idle'); ensureTr();
+  }
+  function renderSentence() {
+    var s = S.sents[S.idx];
+    el.done.hidden = true; el.sentence.hidden = false; el.rdock.hidden = false;
+    el.sentence.replaceChildren();
+    s.words.forEach(function (w, i) {
+      var sp = document.createElement('span'); sp.className = 'w'; sp.textContent = w; sp.dataset.i = i;
+      el.sentence.append(sp, ' ');
+    });
+    var n = S.sents.length;
+    el.rProg.textContent = 'Sentence ' + (S.idx + 1) + ' of ' + n;
+    el.bar.style.width = ((S.idx + 1) / n * 100) + '%';
+    renderTr();
+  }
+  function setState(st) {
+    S.state = st;
+    var n = S.sents.length, last = S.idx === n - 1;
+    el.btnStart.hidden = st !== 'idle';
+    el.btnStop.hidden = st !== 'speaking';
+    el.waitRow.hidden = st !== 'waiting';
+    el.btnPrev.hidden = !(S.idx > 0 && st !== 'speaking');
+    el.nextLabel.textContent = last ? 'Finish' : 'Next';
+    el.startLabel.textContent = S.idx > 0 ? 'Read sentence ' + (S.idx + 1) : 'Start reading';
+  }
+  function go(delta) {
+    S.idx += delta; savePos(S.idx); renderSentence(); play();
+  }
+  function finish() {
+    stopSpeech(); unwake(); savePos(0);
+    S.state = 'done';
+    el.sentence.hidden = true; el.rdock.hidden = true; el.done.hidden = false;
+    el.doneSub.textContent = 'You read ' + S.sents.length + (S.sents.length === 1 ? ' sentence.' : ' sentences.');
+    el.bar.style.width = '100%';
+    renderTr();
+  }
+  el.btnStart.addEventListener('click', play);
+  el.btnRepeat.addEventListener('click', play);
+  el.btnStop.addEventListener('click', function () { stopSpeech(); mark(-1); setState('waiting'); });
+  el.btnNext.addEventListener('click', function () { if (S.idx >= S.sents.length - 1) finish(); else go(1); });
+  el.btnPrev.addEventListener('click', function () { if (S.idx > 0) go(-1); });
+  el.btnAgain.addEventListener('click', function () { S.idx = 0; savePos(0); renderSentence(); setState('idle'); });
+  el.btnHome.addEventListener('click', function () { show('home'); });
+  el.rBack.addEventListener('click', function () { show('home'); });
+  el.sentence.addEventListener('click', function (e) {
+    var t = e.target;
+    if (t && t.classList && t.classList.contains('w') && S.state !== 'speaking') speakSingle(Number(t.dataset.i));
+  });
+  el.btnDemo.addEventListener('click', function () { openReader({ id: null, title: 'Example text', text: DEMO, created: Date.now() }); });
+
+  /* ---------- settings ---------- */
+  function applySettings() {
+    el.rate.value = set.rate; el.rateOut.textContent = '×' + Number(set.rate).toFixed(2);
+    el.gap.value = set.gap; el.gapOut.textContent = (set.gap / 1000).toFixed(1) + ' s';
+    el.segFlow.setAttribute('aria-pressed', String(set.mode === 'flow'));
+    el.segWord.setAttribute('aria-pressed', String(set.mode === 'word'));
+    var wordish = set.mode === 'word' || !!S.nb[nbKey()];
+    el.gapRow.hidden = !wordish;
+    var rs = ['1.6rem', '2rem', '2.5rem'][set.size] || '2rem';
+    el.sentence.style.setProperty('--rs', rs); el.tr.style.setProperty('--rs', rs);
+    el.tgDe.setAttribute('aria-pressed', String(!!set.showDe));
+    el.tgFa.setAttribute('aria-pressed', String(!!set.showFa));
+    el.sizeDown.disabled = set.size <= 0; el.sizeUp.disabled = set.size >= 2;
+  }
+  function openSheet() { el.sheet.hidden = false; el.sheetClose.focus(); }
+  function closeSheet() { el.sheet.hidden = true; el.btnSettings.focus(); }
+  el.btnSettings.addEventListener('click', openSheet);
+  el.sheetClose.addEventListener('click', closeSheet);
+  el.sheet.addEventListener('click', function (e) { if (e.target === el.sheet) closeSheet(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !el.sheet.hidden) closeSheet(); });
+  el.rate.addEventListener('input', function () { set.rate = Number(el.rate.value); saveSet(); applySettings(); });
+  el.gap.addEventListener('input', function () { set.gap = Number(el.gap.value); saveSet(); applySettings(); });
+  el.segFlow.addEventListener('click', function () { set.mode = 'flow'; delete S.nb[nbKey()]; LS.set('lmk.nb', S.nb); el.nbNote.hidden = true; saveSet(); applySettings(); });
+  el.segWord.addEventListener('click', function () { set.mode = 'word'; saveSet(); applySettings(); });
+  el.voice.addEventListener('change', function () { set.voice = el.voice.value; saveSet(); loadVoices(); applySettings(); });
+  el.tgDe.addEventListener('click', function () { set.showDe = !set.showDe; saveSet(); applySettings(); renderTr(); if (set.showDe) ensureTr(); });
+  el.tgFa.addEventListener('click', function () { set.showFa = !set.showFa; saveSet(); applySettings(); renderTr(); if (set.showFa) ensureTr(); });
+  el.sizeDown.addEventListener('click', function () { set.size = Math.max(0, set.size - 1); saveSet(); applySettings(); });
+  el.sizeUp.addEventListener('click', function () { set.size = Math.min(2, set.size + 1); saveSet(); applySettings(); });
+  el.btnTest.addEventListener('click', function () {
+    if (!haveSpeech()) return;
+    var my = ++tok;
+    try { speechSynthesis.cancel(); } catch (e) {}
+    unlockSpeech();
+    sleep(120).then(function () { return sayOne('Hej Khayyam, nu læser vi dansk sammen.', my); });
+  });
+
+  /* ---------- iPhone home-screen look ---------- */
+  try {
+    [['apple-mobile-web-app-capable', 'yes'], ['mobile-web-app-capable', 'yes'], ['apple-mobile-web-app-title', 'Khayyam'], ['theme-color', '#C8102E']].forEach(function (m) {
+      var e = document.createElement('meta'); e.name = m[0]; e.content = m[1]; document.head.append(e);
+    });
+    var cv = document.createElement('canvas'); cv.width = cv.height = 180;
+    var g = cv.getContext('2d');
+    g.fillStyle = '#C8102E'; g.fillRect(0, 0, 180, 180);
+    g.fillStyle = 'rgba(255,255,255,.3)'; g.fillRect(60, 0, 16, 180); g.fillRect(0, 82, 180, 16);
+    g.fillStyle = '#fff'; g.font = '700 110px system-ui, sans-serif'; g.textAlign = 'center'; g.fillText('K', 90, 128);
+    ['apple-touch-icon', 'icon'].forEach(function (rel) {
+      var l = document.createElement('link'); l.rel = rel; l.href = cv.toDataURL('image/png'); document.head.append(l);
+    });
+  } catch (e) {}
+
+  /* ---------- start ---------- */
+  applySettings(); renderList(); updateScanNote(); show('home');
+})();
+</script>
+
+</body></html>
